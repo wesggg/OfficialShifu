@@ -9,20 +9,28 @@
 /* Smooth fade-in animation */
 .fade-in { animation: fadeIn 1s ease-in forwards; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px);} to { opacity: 1; transform: translateY(0);} }
-/* Button hover */
+
+/* Button pulse on hover */
 .btn-hover:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(0,0,0,0.2); transition: all 0.3s ease-in-out; }
-/* Card hover */
+
+/* Card hover lift and glow */
 .card-hover:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.15), 0 0 15px rgba(0,0,0,0.05) inset; transition: all 0.4s ease; }
-/* Welcome gradient */
+
+/* Welcome text gradient */
 .welcome-text { font-size: 2rem; font-weight: bold; background: linear-gradient(90deg, #2563eb, #3b82f6, #fbbf24); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: shine 3s infinite; display: inline-flex; align-items: center; gap: 0.5rem; justify-content: center; }
+
+/* Shine effect */
 @keyframes shine { 0% { background-position: -200%;} 50% { background-position: 200%;} 100% { background-position: -200%;} }
+
 /* Smiling emoji bounce */
 .smile { display: inline-block; animation: bounce 1.5s infinite; color: #facc15; }
 @keyframes bounce { 0%, 100% { transform: translateY(0);} 50% { transform: translateY(-10px);} }
-/* Promo text */
+
+/* Promotional text animation */
 .promo-text { text-align: center; color: #1f2937; font-weight: 600; font-size: 1.1rem; margin-bottom: 1rem; animation: pulseText 2s infinite; }
 @keyframes pulseText { 0%, 100% { opacity: 1; transform: scale(1);} 50% { opacity: 0.9; transform: scale(1.02);} }
-/* Brokers */
+
+/* Broker Buttons */
 .broker-btn { display: inline-block; padding: 0.6rem 1.5rem; font-weight: 600; border-radius: 9999px; color: #fff; text-align: center; transition: all 0.4s ease; font-size: 0.95rem; }
 .broker-deriv { background: linear-gradient(135deg, #3b82f6, #2563eb); box-shadow: 0 4px 12px rgba(59,130,246,0.4); }
 .broker-exness { background: linear-gradient(135deg, #fbbf24, #f59e0b); box-shadow: 0 4px 12px rgba(251,191,36,0.4); }
@@ -30,11 +38,147 @@
 .broker-headway { background: linear-gradient(135deg, #9333ea, #7e22ce); box-shadow: 0 4px 12px rgba(147,51,234,0.4); }
 .broker-freshforex { background: linear-gradient(135deg, #ef4444, #dc2626); box-shadow: 0 4px 12px rgba(239,68,68,0.4); }
 .broker-templerfx { background: linear-gradient(135deg, #06b6d4, #0891b2); box-shadow: 0 4px 12px rgba(6,182,212,0.4); }
+
 .broker-btn:hover { transform: scale(1.08); box-shadow: 0 6px 20px rgba(0,0,0,0.15); }
+
 /* Broker logos */
 .broker-logo { width: 80px; height: 80px; object-fit: contain; margin: 0 auto 0.75rem auto; }
-/* News */
+
+/* Professional news list */
 .news-card { background-color: #f3f4f6; border-left: 4px solid #3b82f6; padding: 1rem; border-radius: 0.75rem; transition: all 0.3s ease; }
+.news-card:hover { transform: translateY(-4px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); border-left-color: #fbbf24; }
+.news-title { font-weight: 600; color: #111827; margin-bottom: 0.3rem; }
+.news-source { font-size: 0.8rem; color: #6b7280; }
+.news-date { font-size: 0.8rem; color: #4b5563; float: right; }
+
+/* Body background */
+body { background-color: #e5e7eb; color: #1f2937; }
+
+/* Footer social icons */
+.social-icons a { display: inline-block; margin: 0 0.5rem; transition: transform 0.3s ease; }
+.social-icons a:hover { transform: scale(1.2); }
+</style>
+</head>
+<body class="font-sans">
+
+<header class="bg-transparent shadow p-4 sticky top-0 z-10"></header>
+
+<!-- Welcome Message Centered -->
+<section class="fade-in py-12 flex justify-center">
+  <h1 class="welcome-text text-center">
+    Welcome <span class="smile">😊</span>
+  </h1>
+</section>
+
+<main class="p-4 space-y-6">
+
+  <!-- Brokers Section -->
+  <section class="mb-6 fade-in">
+    <h2 class="text-lg font-semibold mb-4 text-gray-700">🏦 Top Brokers</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+      <!-- Deriv -->
+      <div class="bg-white p-4 rounded-xl shadow card-hover text-center">
+        <img src="https://seeklogo.com/images/D/deriv-logo-8A3E28C03A-seeklogo.com.png" alt="Deriv Logo" class="broker-logo">
+        <h3 class="font-bold text-gray-900">Deriv</h3>
+        <p class="text-gray-500 text-sm mb-2">Regulated, Multi-asset trading</p>
+        <p class="text-gray-500 text-sm mb-4">Minimum Deposit: $10</p>
+        <a href="https://www.deriv.com" target="_blank" class="broker-btn broker-deriv btn-hover inline-block">Sign Up Now</a>
+        <p class="text-gray-500 text-sm mt-2">
+          <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5s8.268 2.943 9.542 7c-1.274 4.057-5.065 7-9.542 7s-8.268-2.943-9.542-7z"/>
+          </svg>
+          Visits: <span id="visit-deriv">0</span>
+        </p>
+      </div>
+
+      <!-- Exness -->
+      <div class="bg-white p-4 rounded-xl shadow card-hover text-center">
+        <img src="https://seeklogo.com/images/E/exness-logo-08CDAE905E-seeklogo.com.png" alt="Exness Logo" class="broker-logo">
+        <h3 class="font-bold text-gray-900">Exness</h3>
+        <p class="text-gray-500 text-sm mb-2">Fast execution, Forex & CFD</p>
+        <p class="text-gray-500 text-sm mb-4">Minimum Deposit: $1</p>
+        <a href="https://www.exness.com" target="_blank" class="broker-btn broker-exness btn-hover inline-block">Sign Up Now</a>
+        <p class="text-gray-500 text-sm mt-2">
+          <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5s8.268 2.943 9.542 7c-1.274 4.057-5.065 7-9.542 7s-8.268-2.943-9.542-7z"/>
+          </svg>
+          Visits: <span id="visit-exness">0</span>
+        </p>
+      </div>
+
+      <!-- Weltrade -->
+      <div class="bg-white p-4 rounded-xl shadow card-hover text-center">
+        <img src="https://www.weltrade.com/static/media/logo.5f05d39a.svg" alt="Weltrade Logo" class="broker-logo">
+        <h3 class="font-bold text-gray-900">Weltrade</h3>
+        <p class="text-gray-500 text-sm mb-2">Beginner-friendly, Bonus offers</p>
+        <p class="text-gray-500 text-sm mb-4">Minimum Deposit: $5</p>
+        <a href="https://gowt.net/ib64969" target="_blank" class="broker-btn broker-weltrade btn-hover inline-block">Sign Up Now</a>
+        <p class="text-gray-500 text-sm mt-2">
+          <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5s8.268 2.943 9.542 7c-1.274 4.057-5.065 7-9.542 7s-8.268-2.943-9.542-7z"/>
+          </svg>
+          Visits: <span id="visit-weltrade">0</span>
+        </p>
+      </div>
+
+      <!-- Headway -->
+      <div class="bg-white p-4 rounded-xl shadow card-hover text-center">
+        <img src="https://headway.partners/images/logo.svg" alt="Headway Logo" class="broker-logo">
+        <h3 class="font-bold text-gray-900">Headway</h3>
+        <p class="text-gray-500 text-sm mb-2">Flexible accounts, user-friendly</p>
+        <p class="text-gray-500 text-sm mb-4">Minimum Deposit: $10</p>
+        <a href="https://headway.partners/user/signup?hwp=c89c47" target="_blank" class="broker-btn broker-headway btn-hover inline-block">Sign Up Now</a>
+        <p class="text-gray-500 text-sm mt-2">
+          <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5s8.268 2.943 9.542 7c-1.274 4.057-5.065 7-9.542 7s-8.268-2.943-9.542-7z"/>
+          </svg>
+          Visits: <span id="visit-headway">0</span>
+        </p>
+      </div>
+
+      <!-- FreshForex -->
+      <div class="bg-white p-4 rounded-xl shadow card-hover text-center">
+        <img src="https://freshforex.com/favicon.ico" alt="FreshForex Logo" class="broker-logo">
+        <h3 class="font-bold text-gray-900">FreshForex</h3>
+        <p class="text-gray-500 text-sm mb-2">Instant execution, cashback offers</p>
+        <p class="text-gray-500 text-sm mb-4">Minimum Deposit: $1</p>
+        <a href="https://freshforex.com/?aff=448960" target="_blank" class="broker-btn broker-freshforex btn-hover inline-block">Sign Up Now</a>
+        <p class="text-gray-500 text-sm mt-2">
+          <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5s8.268 2.943 9.542 7c-1.274 4.057-5.065 7-9.542 7s-8.268-2.943-9.542-7z"/>
+          </svg>
+          Visits: <span id="visit-freshforex">0</span>
+        </p>
+      </div>
+
+      <!-- TemplerFX -->
+      <div class="bg-white p-4 rounded-xl shadow card-hover text-center">
+        <img src="https://dashboard.templerfx.com/images/logo.png" alt="TemplerFX Logo" class="broker-logo">
+        <h3 class="font-bold text-gray-900">TemplerFX</h3>
+        <p class="text-gray-500 text-sm mb-2">Islamic accounts, multiple platforms</p>
+        <p class="text-gray-500 text-sm mb-4">Minimum Deposit: $25</p>
+        <a href="https://dashboard.templerfx.com/login/sign_up/648587" target="_blank" class="broker-btn broker-templerfx btn-hover inline-block">Sign Up Now</a>
+        <p class="text-gray-500 text-sm mt-2">
+          <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5s8.268 2.943 9.542 7c-1.274 4.057-5.065 7-9.542 7s-8.268-2.943-9.542-7z"/>
+          </svg>
+          Visits: <span id="visit-templerfx">0</span>
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Shifu Pay Section -->
+  <section class="fade-in">
+    <h2.news-card { background-color: #f3f4f6; border-left: 4px solid #3b82f6; padding: 1rem; border-radius: 0.75rem; transition: all 0.3s ease; }
 .news-card:hover { transform: translateY(-4px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); border-left-color: #fbbf24; }
 .news-title { font-weight: 600; color: #111827; margin-bottom: 0.3rem; }
 .news-source { font-size: 0.8rem; color: #6b7280; }
