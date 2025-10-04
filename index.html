@@ -38,9 +38,11 @@
         const lines = text.split('\n').filter(line => line && !line.startsWith('#'));
 
         const metricsData = {};
+
         lines.forEach(line => {
-          const [key, value] = line.split(' ');
-          metricsData[key] = Number(value);
+          const [metric, value] = line.trim().split(/\s+/);
+          if (!metric || isNaN(value)) return;
+          metricsData[metric] = Number(value);
         });
 
         renderMetrics(metricsData);
@@ -55,15 +57,18 @@
 
       // Group metrics by worker
       const workers = {};
-      for (const key in metricsData) {
+
+      Object.keys(metricsData).forEach(key => {
+        // Example: pendingEventsWorker_unknown_processed
         const parts = key.split('_');
         const workerName = parts[0];
         const metricType = parts.slice(1).join('_');
+
         if (!workers[workerName]) workers[workerName] = [];
         workers[workerName].push({ name: metricType, value: metricsData[key] });
-      }
+      });
 
-      for (const workerName in workers) {
+      Object.keys(workers).forEach(workerName => {
         const card = document.createElement('div');
         card.className = 'bg-white shadow rounded p-4';
 
@@ -80,16 +85,16 @@
 
           const label = document.createElement('div');
           label.className = 'flex justify-between';
-          label.innerHTML = `<span class="font-medium">${metric.name.replace(/_/g, ' ')}</span> <span class="font-mono">${metric.value}</span>`;
+          label.innerHTML = `<span class="font-medium">${metric.name.replace(/_/g,' ')}</span> <span class="font-mono">${metric.value}</span>`;
           metricDiv.appendChild(label);
 
-          // Render bar for processed/failed events
+          // Only show bar for processed or failed events
           if (metric.name.endsWith('processed') || metric.name.endsWith('failed')) {
             const barContainer = document.createElement('div');
             barContainer.className = 'bar-container flex';
 
             const bar = document.createElement('div');
-            bar.style.width = `${Math.min(metric.value * 5, 100)}%`; // simple scaling
+            bar.style.width = `${Math.min(metric.value * 5, 100)}%`; // scale 5x, max 100%
             bar.className = metric.name.endsWith('processed') ? 'bar-processed' : 'bar-failed';
             barContainer.appendChild(bar);
 
@@ -101,12 +106,10 @@
 
         card.appendChild(list);
         container.appendChild(card);
-      }
+      });
     }
 
-    // Initial fetch
     fetchMetrics();
-    // Refresh every 5 seconds
     setInterval(fetchMetrics, 5000);
   </script>
 </body>
