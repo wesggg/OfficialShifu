@@ -1,133 +1,113 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>User Panel</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<style>
-/* Smooth fade-in animation */
-.fade-in { animation: fadeIn 1s ease-in forwards; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px);} to { opacity: 1; transform: translateY(0);} }
-
-/* Button pulse on hover */
-.btn-hover:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(0,0,0,0.2); transition: all 0.3s ease-in-out; }
-
-/* Card hover lift and glow */
-.card-hover:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.15), 0 0 15px rgba(0,0,0,0.05) inset; transition: all 0.4s ease; }
-
-/* Welcome text gradient */
-.welcome-text { font-size: 2rem; font-weight: bold; background: linear-gradient(90deg, #2563eb, #3b82f6, #fbbf24); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: shine 3s infinite; display: inline-flex; align-items: center; gap: 0.5rem; justify-content: center; }
-@keyframes shine { 0% { background-position: -200%;} 50% { background-position: 200%;} 100% { background-position: -200%;} }
-
-/* Smiling emoji bounce */
-.smile { display: inline-block; animation: bounce 1.5s infinite; color: #facc15; }
-@keyframes bounce { 0%, 100% { transform: translateY(0);} 50% { transform: translateY(-10px);} }
-
-/* Promotional text animation */
-.promo-text { text-align: center; color: #1f2937; font-weight: 600; font-size: 1.1rem; margin-bottom: 1rem; animation: pulseText 2s infinite; }
-@keyframes pulseText { 0%, 100% { opacity: 1; transform: scale(1);} 50% { opacity: 0.9; transform: scale(1.02);} }
-
-/* Broker Buttons */
-.broker-btn { display: inline-block; padding: 0.6rem 1.5rem; font-weight: 600; border-radius: 9999px; color: #fff; text-align: center; transition: all 0.4s ease; font-size: 0.95rem; cursor:pointer;}
-.broker-deriv { background: linear-gradient(135deg, #3b82f6, #2563eb); box-shadow: 0 4px 12px rgba(59,130,246,0.4); }
-.broker-exness { background: linear-gradient(135deg, #fbbf24, #f59e0b); box-shadow: 0 4px 12px rgba(251,191,36,0.4); }
-.broker-weltrade { background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 12px rgba(16,185,129,0.4); }
-.broker-headway { background: linear-gradient(135deg, #9333ea, #7e22ce); box-shadow: 0 4px 12px rgba(147,51,234,0.4); }
-.broker-freshforex { background: linear-gradient(135deg, #ef4444, #dc2626); box-shadow: 0 4px 12px rgba(239,68,68,0.4); }
-.broker-templerfx { background: linear-gradient(135deg, #06b6d4, #0891b2); box-shadow: 0 4px 12px rgba(6,182,212,0.4); }
-.broker-btn:hover { transform: scale(1.08); box-shadow: 0 6px 20px rgba(0,0,0,0.15); }
-
-/* Broker logos */
-.broker-logo { width: 80px; height: 80px; object-fit: contain; margin: 0 auto 0.75rem auto; }
-
-/* Professional news list */
-.news-card { background-color: #f3f4f6; border-left: 4px solid #3b82f6; padding: 1rem; border-radius: 0.75rem; transition: all 0.3s ease; }
-.news-card:hover { transform: translateY(-4px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); border-left-color: #fbbf24; }
-.news-title { font-weight: 600; color: #111827; margin-bottom: 0.3rem; }
-.news-source { font-size: 0.8rem; color: #6b7280; }
-.news-date { font-size: 0.8rem; color: #4b5563; float: right; }
-
-/* Body background */
-body { background-color: #e5e7eb; color: #1f2937; }
-
-/* Footer social icons */
-.social-icons a { display: inline-block; margin: 0 0.5rem; transition: transform 0.3s ease; }
-.social-icons a:hover { transform: scale(1.2); }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Worker Metrics Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .bar-container {
+      background-color: #e5e7eb; /* gray-200 */
+      border-radius: 4px;
+      overflow: hidden;
+      height: 16px;
+      margin-top: 4px;
+    }
+    .bar-processed {
+      background-color: #10b981; /* green */
+      height: 100%;
+    }
+    .bar-failed {
+      background-color: #ef4444; /* red */
+      height: 100%;
+    }
+  </style>
 </head>
-<body class="font-sans">
+<body class="bg-gray-100 min-h-screen p-6">
+  <h1 class="text-3xl font-bold mb-6 text-center">Worker Metrics Dashboard</h1>
 
-<header class="bg-transparent shadow p-4 sticky top-0 z-10"></header>
+  <div id="metrics-container" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3"></div>
 
-<section class="fade-in py-12 flex justify-center">
-  <h1 class="welcome-text text-center">
-    Welcome <span class="smile">😊</span>
-  </h1>
-</section>
+  <script>
+    const METRICS_URL = 'https://worker-5xfi.onrender.com/metrics';
 
-<main class="p-4 space-y-6">
+    async function fetchMetrics() {
+      try {
+        const res = await fetch(METRICS_URL);
+        const text = await res.text();
+        const lines = text.split('\n').filter(line => line && !line.startsWith('#'));
 
-<section class="mb-6 fade-in">
-<h2 class="text-lg font-semibold mb-4 text-gray-700">🏦 Top Brokers</h2>
-<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        const metricsData = {};
+        lines.forEach(line => {
+          const [key, value] = line.split(' ');
+          metricsData[key] = Number(value);
+        });
 
-<!-- Deriv -->
-<div class="bg-white p-4 rounded-xl shadow card-hover text-center">
-  <img src="https://seeklogo.com/images/D/deriv-logo-8A3E28C03A-seeklogo.com.png" alt="Deriv Logo" class="broker-logo">
-  <h3 class="font-bold text-gray-900">Deriv</h3>
-  <p class="text-gray-500 text-sm mb-2">Regulated, Multi-asset trading</p>
-  <p class="text-gray-500 text-sm mb-4">Minimum Deposit: $10</p>
-  <a href="https://www.deriv.com" class="broker-btn broker-deriv btn-hover inline-block">Sign Up Now</a>
-  <p class="text-gray-500 text-sm mt-2">
-    <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-      <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5s8.268 2.943 9.542 7c-1.274 4.057-5.065 7-9.542 7s-8.268-2.943-9.542-7z"/>
-    </svg>
-    Visits: <span id="visit-deriv">0</span>
-  </p>
-</div>
+        renderMetrics(metricsData);
+      } catch (err) {
+        console.error('Failed to fetch metrics:', err);
+      }
+    }
 
-<!-- Exness -->
-<div class="bg-white p-4 rounded-xl shadow card-hover text-center">
-  <img src="https://seeklogo.com/images/E/exness-logo-08CDAE905E-seeklogo.com.png" alt="Exness Logo" class="broker-logo">
-  <h3 class="font-bold text-gray-900">Exness</h3>
-  <p class="text-gray-500 text-sm mb-2">Fast execution, Forex & CFD</p>
-  <p class="text-gray-500 text-sm mb-4">Minimum Deposit: $1</p>
-  <a href="https://www.exness.com" class="broker-btn broker-exness btn-hover inline-block">Sign Up Now</a>
-  <p class="text-gray-500 text-sm mt-2">
-    <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-      <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5s8.268 2.943 9.542 7c-1.274 4.057-5.065 7-9.542 7s-8.268-2.943-9.542-7z"/>
-    </svg>
-    Visits: <span id="visit-exness">0</span>
-  </p>
-</div>
+    function renderMetrics(metricsData) {
+      const container = document.getElementById('metrics-container');
+      container.innerHTML = '';
 
-<!-- Weltrade -->
-<div class="bg-white p-4 rounded-xl shadow card-hover text-center">
-  <img src="https://www.weltrade.com/static/media/logo.5f05d39a.svg" alt="Weltrade Logo" class="broker-logo">
-  <h3 class="font-bold text-gray-900">Weltrade</h3>
-  <p class="text-gray-500 text-sm mb-2">Beginner-friendly, Bonus offers</p>
-  <p class="text-gray-500 text-sm mb-4">Minimum Deposit: $5</p>
-  <a href="https://gowt.net/ib64969" class="broker-btn broker-weltrade btn-hover inline-block">Sign Up Now</a>
-  <p class="text-gray-500 text-sm mt-2">
-    <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-      <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5s8.268 2.943 9.542 7c-1.274 4.057-5.065 7-9.542 7s-8.268-2.943-9.542-7z"/>
-    </svg>
-    Visits: <span id="visit-weltrade">0</span>
-  </p>
-</div>
+      // Group metrics by worker
+      const workers = {};
+      for (const key in metricsData) {
+        const parts = key.split('_');
+        const workerName = parts[0];
+        const metricType = parts.slice(1).join('_');
+        if (!workers[workerName]) workers[workerName] = [];
+        workers[workerName].push({ name: metricType, value: metricsData[key] });
+      }
 
-<!-- Headway -->
-<div class="bg-white p-4 rounded-xl shadow card-hover text-center">
-  <img src="https://headway.partners/images/logo.svg" alt="Headway Logo" class="broker-logo">
-  <h3 class="font-bold text-gray-900">Headway</h3>
-  <p class="text-gray-500 text-sm mb-2">Flexible accounts, user-friendly</p>
-  <p class="text-gray-500 text-sm mb-4">Minimum Deposit: $10</p>
-  <a href="https://headway.partners/user/signup?hwp=c89c47" class="broker-btn broker-headway btn-hover inline-block">Sign Up Now</a>
-  <p class="text-gray-500 text-sm mt-2">
-    <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-      <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5s8.268 2.943 9.542 7c-1.274 4.057-5.065 7-9.542 7
+      for (const workerName in workers) {
+        const card = document.createElement('div');
+        card.className = 'bg-white shadow rounded p-4';
+
+        const title = document.createElement('h2');
+        title.className = 'text-xl font-semibold mb-3';
+        title.textContent = workerName;
+        card.appendChild(title);
+
+        const list = document.createElement('div');
+        list.className = 'space-y-4';
+
+        workers[workerName].forEach(metric => {
+          const metricDiv = document.createElement('div');
+
+          const label = document.createElement('div');
+          label.className = 'flex justify-between';
+          label.innerHTML = `<span class="font-medium">${metric.name.replace(/_/g, ' ')}</span> <span class="font-mono">${metric.value}</span>`;
+          metricDiv.appendChild(label);
+
+          // Render bar for processed/failed events
+          if (metric.name.endsWith('processed') || metric.name.endsWith('failed')) {
+            const barContainer = document.createElement('div');
+            barContainer.className = 'bar-container flex';
+
+            const bar = document.createElement('div');
+            bar.style.width = `${Math.min(metric.value * 5, 100)}%`; // simple scaling
+            bar.className = metric.name.endsWith('processed') ? 'bar-processed' : 'bar-failed';
+            barContainer.appendChild(bar);
+
+            metricDiv.appendChild(barContainer);
+          }
+
+          list.appendChild(metricDiv);
+        });
+
+        card.appendChild(list);
+        container.appendChild(card);
+      }
+    }
+
+    // Initial fetch
+    fetchMetrics();
+    // Refresh every 5 seconds
+    setInterval(fetchMetrics, 5000);
+  </script>
+</body>
+</html>
