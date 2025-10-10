@@ -3,117 +3,237 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Worker Metrics Dashboard</title>
+<title>Virtual Wallet Dashboard</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<style>
-  .bar-container {
-    background-color: #e5e7eb; /* gray-200 */
-    border-radius: 4px;
-    overflow: hidden;
-    height: 16px;
-    margin-top: 4px;
-  }
-  .bar-processed {
-    background-color: #10b981; /* green */
-    height: 100%;
-  }
-  .bar-failed {
-    background-color: #ef4444; /* red */
-    height: 100%;
-  }
-  .bar-queue {
-    background-color: #3b82f6; /* blue */
-    height: 100%;
-  }
-</style>
 </head>
-<body class="bg-gray-100 min-h-screen p-6">
-<h1 class="text-3xl font-bold mb-6 text-center">Worker Metrics Dashboard</h1>
+<body class="bg-gray-100 font-sans">
 
-<div id="metrics-container" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3"></div>
+<div class="flex h-screen">
+  <!-- Sidebar -->
+  <div class="w-64 bg-white shadow-lg p-6">
+    <h1 class="text-2xl font-bold mb-6">Wallet Dashboard</h1>
+    <ul>
+      <li class="mb-4"><button id="nav-dashboard" class="text-blue-600 hover:underline">Dashboard</button></li>
+      <li class="mb-4"><button id="nav-wallets" class="text-blue-600 hover:underline">Wallets</button></li>
+      <li class="mb-4"><button id="nav-transactions" class="text-blue-600 hover:underline">Transactions</button></li>
+      <li class="mb-4"><button id="nav-operations" class="text-blue-600 hover:underline">Wallet Ops</button></li>
+    </ul>
+  </div>
+
+  <!-- Main content -->
+  <div class="flex-1 p-6 overflow-auto">
+    <div id="main-content">
+      <h2 class="text-xl font-bold mb-4">Dashboard</h2>
+      <p>Welcome! Use the sidebar to manage wallets and transactions.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Notification Toast -->
+<div id="toast" class="fixed bottom-6 right-6 bg-green-500 text-white px-4 py-2 rounded shadow-lg hidden"></div>
 
 <script>
-const METRICS_URL = 'https://worker-5xfi.onrender.com/metrics';
+const API_URL = 'https://escrow-blackp2p-com.onrender.com/virtual-wallet';
 
-async function fetchMetrics() {
+// --- Utility ---
+function showToast(message, success = true) {
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.className = success
+    ? 'fixed bottom-6 right-6 bg-green-500 text-white px-4 py-2 rounded shadow-lg'
+    : 'fixed bottom-6 right-6 bg-red-500 text-white px-4 py-2 rounded shadow-lg';
+  toast.classList.remove('hidden');
+  setTimeout(() => toast.classList.add('hidden'), 3000);
+}
+
+// --- Navigation ---
+document.getElementById('nav-dashboard').onclick = () => loadDashboard();
+document.getElementById('nav-wallets').onclick = () => loadWallets();
+document.getElementById('nav-transactions').onclick = () => loadTransactions();
+document.getElementById('nav-operations').onclick = () => loadWalletOperations();
+
+// --- Dashboard ---
+function loadDashboard() {
+  document.getElementById('main-content').innerHTML = `
+    <h2 class="text-xl font-bold mb-4">Dashboard</h2>
+    <p>Welcome! Use the sidebar to manage wallets, perform operations, and view transactions.</p>
+  `;
+}
+
+// --- Wallets Tab ---
+async function loadWallets() {
+  document.getElementById('main-content').innerHTML = `
+    <h2 class="text-xl font-bold mb-4">Wallets</h2>
+    <button id="create-wallet-btn" class="bg-blue-500 text-white px-4 py-2 rounded mb-4">Create New Wallet</button>
+    <div id="wallet-list">Loading wallets...</div>
+  `;
+
+  document.getElementById('create-wallet-btn').onclick = createWallet;
+
   try {
-    const res = await fetch(METRICS_URL);
-    const text = await res.text();
-    const lines = text.split('\n').filter(line => line && !line.startsWith('#'));
-
-    const metricsData = {};
-
-    lines.forEach(line => {
-      const [metric, value] = line.trim().split(/\s+/);
-      if (!metric || isNaN(value)) return;
-      metricsData[metric] = Number(value);
-    });
-
-    renderMetrics(metricsData);
-  } catch (err) {
-    console.error('Failed to fetch metrics:', err);
+    const res = await fetch(API_URL + '/');
+    const data = await res.json();
+    if(!data.wallets) data.wallets = [];
+    const walletsHTML = data.wallets.map(w => `
+      <div class="bg-white p-4 mb-2 shadow rounded flex justify-between items-center">
+        <div>
+          <strong>ID:</strong> ${w.walletId}<br>
+          <strong>Balances:</strong> ${JSON.stringify(w.balances)}
+        </div>
+        <button class="bg-gray-200 px-3 py-1 rounded" onclick="viewTransactions('${w.walletId}')">Transactions</button>
+      </div>
+    `).join('');
+    document.getElementById('wallet-list').innerHTML = walletsHTML;
+  } catch(err) {
+    showToast(err.message, false);
+    document.getElementById('wallet-list').innerHTML = '<p>Error loading wallets.</p>';
   }
 }
 
-function renderMetrics(metricsData) {
-  const container = document.getElementById('metrics-container');
-  container.innerHTML = '';
-
-  const workers = {};
-
-  Object.keys(metricsData).forEach(key => {
-    // Example: pendingEventsWorker_unknown_processed or pendingEventsWorker_queue_depth
-    const parts = key.split('_');
-    const workerName = parts[0];
-    const metricType = parts.slice(1).join('_');
-
-    if (!workers[workerName]) workers[workerName] = [];
-    workers[workerName].push({ name: metricType, value: metricsData[key] });
-  });
-
-  Object.keys(workers).forEach(workerName => {
-    const card = document.createElement('div');
-    card.className = 'bg-white shadow rounded p-4';
-
-    const title = document.createElement('h2');
-    title.className = 'text-xl font-semibold mb-3';
-    title.textContent = workerName;
-    card.appendChild(title);
-
-    const list = document.createElement('div');
-    list.className = 'space-y-4';
-
-    workers[workerName].forEach(metric => {
-      const metricDiv = document.createElement('div');
-
-      const label = document.createElement('div');
-      label.className = 'flex justify-between';
-      label.innerHTML = `<span class="font-medium">${metric.name.replace(/_/g,' ')}</span> <span class="font-mono">${metric.value}</span>`;
-      metricDiv.appendChild(label);
-
-      const barContainer = document.createElement('div');
-      barContainer.className = 'bar-container flex';
-
-      const bar = document.createElement('div');
-      bar.style.width = `${Math.min(metric.value * 5, 100)}%`; // scale to fit nicely
-      if (metric.name.endsWith('processed')) bar.className = 'bar-processed';
-      else if (metric.name.endsWith('failed')) bar.className = 'bar-failed';
-      else if (metric.name.endsWith('queue_depth')) bar.className = 'bar-queue';
-      else bar.className = 'bar-queue';
-      
-      barContainer.appendChild(bar);
-      metricDiv.appendChild(barContainer);
-
-      list.appendChild(metricDiv);
-    });
-
-    card.appendChild(list);
-    container.appendChild(card);
-  });
+// --- Create Wallet ---
+async function createWallet() {
+  try {
+    const res = await fetch(API_URL + '/create', { method: 'POST' });
+    const data = await res.json();
+    if(data.success) {
+      showToast('Wallet created: ' + data.walletId);
+      loadWallets();
+    } else showToast(data.error || 'Error creating wallet', false);
+  } catch(err) { showToast(err.message, false); }
 }
 
-fetchMetrics();
-setInterval(fetchMetrics, 5000);
+// --- Wallet Operations Tab ---
+function loadWalletOperations() {
+  document.getElementById('main-content').innerHTML = `
+    <h2 class="text-xl font-bold mb-4">Wallet Operations</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Credit Form -->
+      <div class="bg-white p-4 shadow rounded">
+        <h3 class="font-bold mb-2">Credit Wallet</h3>
+        <input id="credit-walletId" placeholder="Wallet ID" class="border p-2 w-full mb-2">
+        <input id="credit-token" placeholder="Token (USDT,USDC...)" class="border p-2 w-full mb-2">
+        <input id="credit-amount" placeholder="Amount" type="number" class="border p-2 w-full mb-2">
+        <input id="credit-meta" placeholder="Meta (optional)" class="border p-2 w-full mb-2">
+        <button class="bg-green-500 text-white px-4 py-2 rounded" onclick="creditWallet()">Credit</button>
+      </div>
+
+      <!-- Debit Form -->
+      <div class="bg-white p-4 shadow rounded">
+        <h3 class="font-bold mb-2">Debit Wallet</h3>
+        <input id="debit-walletId" placeholder="Wallet ID" class="border p-2 w-full mb-2">
+        <input id="debit-token" placeholder="Token (USDT,USDC...)" class="border p-2 w-full mb-2">
+        <input id="debit-amount" placeholder="Amount" type="number" class="border p-2 w-full mb-2">
+        <input id="debit-meta" placeholder="Meta (optional)" class="border p-2 w-full mb-2">
+        <button class="bg-red-500 text-white px-4 py-2 rounded" onclick="debitWallet()">Debit</button>
+      </div>
+
+      <!-- Transfer Form -->
+      <div class="bg-white p-4 shadow rounded md:col-span-2">
+        <h3 class="font-bold mb-2">Transfer Between Wallets</h3>
+        <input id="transfer-from" placeholder="From Wallet ID" class="border p-2 w-full mb-2">
+        <input id="transfer-to" placeholder="To Wallet ID" class="border p-2 w-full mb-2">
+        <input id="transfer-token" placeholder="Token" class="border p-2 w-full mb-2">
+        <input id="transfer-amount" placeholder="Amount" type="number" class="border p-2 w-full mb-2">
+        <input id="transfer-meta" placeholder="Meta (optional)" class="border p-2 w-full mb-2">
+        <button class="bg-blue-500 text-white px-4 py-2 rounded" onclick="transferWallet()">Transfer</button>
+      </div>
+    </div>
+  `;
+}
+
+// --- Credit Wallet ---
+async function creditWallet() {
+  const walletId = document.getElementById('credit-walletId').value;
+  const token = document.getElementById('credit-token').value;
+  const amount = document.getElementById('credit-amount').value;
+  const meta = document.getElementById('credit-meta').value;
+
+  if(!walletId || !token || !amount) { showToast('All required fields needed', false); return; }
+
+  try {
+    const res = await fetch(`${API_URL}/${walletId}/credit`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ token, amount, meta })
+    });
+    const data = await res.json();
+    if(data.success) showToast('Wallet credited successfully');
+    else showToast(data.error || 'Error', false);
+  } catch(err) { showToast(err.message,false); }
+}
+
+// --- Debit Wallet ---
+async function debitWallet() {
+  const walletId = document.getElementById('debit-walletId').value;
+  const token = document.getElementById('debit-token').value;
+  const amount = document.getElementById('debit-amount').value;
+  const meta = document.getElementById('debit-meta').value;
+
+  if(!walletId || !token || !amount) { showToast('All required fields needed', false); return; }
+
+  try {
+    const res = await fetch(`${API_URL}/${walletId}/debit`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ token, amount, meta })
+    });
+    const data = await res.json();
+    if(data.success) showToast('Wallet debited successfully');
+    else showToast(data.error || 'Error', false);
+  } catch(err) { showToast(err.message,false); }
+}
+
+// --- Transfer Wallet ---
+async function transferWallet() {
+  const fromWalletId = document.getElementById('transfer-from').value;
+  const toWalletId = document.getElementById('transfer-to').value;
+  const token = document.getElementById('transfer-token').value;
+  const amount = document.getElementById('transfer-amount').value;
+  const meta = document.getElementById('transfer-meta').value;
+
+  if(!fromWalletId || !toWalletId || !token || !amount) { showToast('All required fields needed', false); return; }
+
+  try {
+    const res = await fetch(`${API_URL}/transfer`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ fromWalletId, toWalletId, token, amount, meta })
+    });
+    const data = await res.json();
+    if(data.success) showToast('Transfer successful');
+    else showToast(data.error || 'Error', false);
+  } catch(err) { showToast(err.message,false); }
+}
+
+// --- Transactions Tab ---
+async function loadTransactions() {
+  document.getElementById('main-content').innerHTML = `
+    <h2 class="text-xl font-bold mb-4">Transactions</h2>
+    <input id="tx-wallet-id" placeholder="Enter Wallet ID" class="border p-2 mb-2 w-1/2">
+    <button class="bg-blue-500 text-white px-4 py-2 rounded mb-4" onclick="viewTransactions()">View Transactions</button>
+    <div id="transactions-list"></div>
+  `;
+}
+
+// --- View Transactions ---
+async function viewTransactions(walletIdInput) {
+  const walletId = walletIdInput || document.getElementById('tx-wallet-id')?.value;
+  if(!walletId) { showToast('Wallet ID required', false); return; }
+
+  try {
+    const res = await fetch(`${API_URL}/${walletId}/transactions`);
+    const data = await res.json();
+    if(!data.transactions) data.transactions = [];
+    const html = data.transactions.map(t => `
+      <div class="bg-white p-2 mb-1 rounded shadow">
+        <strong>${t.type}</strong> ${t.amount} ${t.token} - ${t.meta || ''}
+      </div>
+    `).join('');
+    document.getElementById('transactions-list').innerHTML = html;
+  } catch(err) { showToast(err.message,false); }
+}
+
 </script>
+
 </body>
 </html>
