@@ -93,7 +93,11 @@ async function loadWallets() {
 // --- Create Wallet ---
 async function createWallet() {
   try {
-    const res = await fetch(API_URL + '/create', { method: 'POST' });
+    const res = await fetch(`${API_URL}/create`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}) // fix: send empty JSON body
+    });
     const data = await res.json();
     if(data.success) {
       showToast('Wallet created: ' + data.walletId);
@@ -101,6 +105,7 @@ async function createWallet() {
     } else showToast(data.error || 'Error creating wallet', false);
   } catch(err) { showToast(err.message, false); }
 }
+
 
 // --- Wallet Operations Tab ---
 function loadWalletOperations() {
