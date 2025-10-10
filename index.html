@@ -33,10 +33,11 @@
 <div id="toast" class="fixed bottom-6 right-6 bg-green-500 text-white px-4 py-2 rounded shadow-lg hidden"></div>
 
 <script>
-// FIXED API URL
+// ================= CONFIG =================
 const API_URL = 'https://escrow-blackp2p-com.onrender.com/api/wallet';
+const API_KEY = '97f8-832d-85b5-a40758b5820'; // fixed API key
 
-// --- Utility ---
+// ================= UTILITY =================
 function showToast(message, success = true) {
   const toast = document.getElementById('toast');
   toast.textContent = message;
@@ -47,13 +48,24 @@ function showToast(message, success = true) {
   setTimeout(() => toast.classList.add('hidden'), 3000);
 }
 
-// --- Navigation ---
+// Helper: fetch with API key
+async function fetchWithKey(url, options = {}) {
+  options.headers = {
+    ...(options.headers || {}),
+    'Content-Type': 'application/json',
+    'X-API-KEY': API_KEY
+  };
+  const res = await fetch(url, options);
+  return res.json();
+}
+
+// ================= NAVIGATION =================
 document.getElementById('nav-dashboard').onclick = () => loadDashboard();
 document.getElementById('nav-wallets').onclick = () => loadWallets();
 document.getElementById('nav-transactions').onclick = () => loadTransactions();
 document.getElementById('nav-operations').onclick = () => loadWalletOperations();
 
-// --- Dashboard ---
+// ================= DASHBOARD =================
 function loadDashboard() {
   document.getElementById('main-content').innerHTML = `
     <h2 class="text-xl font-bold mb-4">Dashboard</h2>
@@ -61,7 +73,7 @@ function loadDashboard() {
   `;
 }
 
-// --- Wallets Tab ---
+// ================= WALLETS =================
 async function loadWallets() {
   document.getElementById('main-content').innerHTML = `
     <h2 class="text-xl font-bold mb-4">Wallets</h2>
@@ -72,8 +84,7 @@ async function loadWallets() {
   document.getElementById('create-wallet-btn').onclick = createWallet;
 
   try {
-    const res = await fetch(API_URL + '/');
-    const data = await res.json();
+    const data = await fetchWithKey(API_URL + '/');
     if(!data.wallets) data.wallets = [];
     const walletsHTML = data.wallets.map(w => `
       <div class="bg-white p-4 mb-2 shadow rounded flex justify-between items-center">
@@ -91,23 +102,18 @@ async function loadWallets() {
   }
 }
 
-// --- Create Wallet ---
+// Create Wallet
 async function createWallet() {
   try {
-    const res = await fetch(`${API_URL}/create`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({}) // empty body
-    });
-    const data = await res.json();
+    const data = await fetchWithKey(`${API_URL}/create`, { method: 'POST', body: JSON.stringify({}) });
     if(data.success) {
       showToast('Wallet created: ' + data.walletId);
       loadWallets();
     } else showToast(data.error || 'Error creating wallet', false);
-  } catch(err) { showToast(err.message, false); }
+  } catch(err) { showToast(err.message,false); }
 }
 
-// --- Wallet Operations Tab ---
+// ================= WALLET OPERATIONS =================
 function loadWalletOperations() {
   document.getElementById('main-content').innerHTML = `
     <h2 class="text-xl font-bold mb-4">Wallet Operations</h2>
@@ -146,7 +152,7 @@ function loadWalletOperations() {
   `;
 }
 
-// --- Credit Wallet ---
+// Credit Wallet
 async function creditWallet() {
   const walletId = document.getElementById('credit-walletId').value;
   const token = document.getElementById('credit-token').value;
@@ -156,18 +162,13 @@ async function creditWallet() {
   if(!walletId || !token || !amount) { showToast('All required fields needed', false); return; }
 
   try {
-    const res = await fetch(`${API_URL}/${walletId}/credit`, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ token, amount, meta })
-    });
-    const data = await res.json();
+    const data = await fetchWithKey(`${API_URL}/${walletId}/credit`, { method:'POST', body: JSON.stringify({ token, amount, meta }) });
     if(data.success) showToast('Wallet credited successfully');
     else showToast(data.error || 'Error', false);
   } catch(err) { showToast(err.message,false); }
 }
 
-// --- Debit Wallet ---
+// Debit Wallet
 async function debitWallet() {
   const walletId = document.getElementById('debit-walletId').value;
   const token = document.getElementById('debit-token').value;
@@ -177,18 +178,13 @@ async function debitWallet() {
   if(!walletId || !token || !amount) { showToast('All required fields needed', false); return; }
 
   try {
-    const res = await fetch(`${API_URL}/${walletId}/debit`, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ token, amount, meta })
-    });
-    const data = await res.json();
+    const data = await fetchWithKey(`${API_URL}/${walletId}/debit`, { method:'POST', body: JSON.stringify({ token, amount, meta }) });
     if(data.success) showToast('Wallet debited successfully');
     else showToast(data.error || 'Error', false);
   } catch(err) { showToast(err.message,false); }
 }
 
-// --- Transfer Wallet ---
+// Transfer Wallet
 async function transferWallet() {
   const fromWalletId = document.getElementById('transfer-from').value;
   const toWalletId = document.getElementById('transfer-to').value;
@@ -199,18 +195,13 @@ async function transferWallet() {
   if(!fromWalletId || !toWalletId || !token || !amount) { showToast('All required fields needed', false); return; }
 
   try {
-    const res = await fetch(`${API_URL}/transfer`, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ fromWalletId, toWalletId, token, amount, meta })
-    });
-    const data = await res.json();
+    const data = await fetchWithKey(`${API_URL}/transfer`, { method:'POST', body: JSON.stringify({ fromWalletId, toWalletId, token, amount, meta }) });
     if(data.success) showToast('Transfer successful');
     else showToast(data.error || 'Error', false);
   } catch(err) { showToast(err.message,false); }
 }
 
-// --- Transactions Tab ---
+// ================= TRANSACTIONS =================
 async function loadTransactions() {
   document.getElementById('main-content').innerHTML = `
     <h2 class="text-xl font-bold mb-4">Transactions</h2>
@@ -220,14 +211,12 @@ async function loadTransactions() {
   `;
 }
 
-// --- View Transactions ---
 async function viewTransactions(walletIdInput) {
   const walletId = walletIdInput || document.getElementById('tx-wallet-id')?.value;
   if(!walletId) { showToast('Wallet ID required', false); return; }
 
   try {
-    const res = await fetch(`${API_URL}/${walletId}/transactions`);
-    const data = await res.json();
+    const data = await fetchWithKey(`${API_URL}/${walletId}/transactions`);
     if(!data.transactions) data.transactions = [];
     const html = data.transactions.map(t => `
       <div class="bg-white p-2 mb-1 rounded shadow">
