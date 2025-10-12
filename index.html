@@ -1,232 +1,234 @@
-<!DOCTYPE html>
+<!doctype html>
+
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Virtual Wallet Dashboard</title>
-<script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 font-sans">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Escrow Confirm Tester</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--muted:#9aa4b2;--accent:#06b6d4;--ok:#16a34a;--err:#ef4444}
+    *{box-sizing:border-box}
+    body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial; margin:0; background:linear-gradient(180deg,#071126 0%, #071b2b 100%); color:#e6eef6; min-height:100vh; padding:28px}
+    .container{max-width:960px;margin:0 auto}
+    header{display:flex;gap:16px;align-items:center;margin-bottom:20px}
+    h1{font-size:20px;margin:0}
+    p.lead{margin:0;color:var(--muted);font-size:13px}.card{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(0,0,0,0.04)); border:1px solid rgba(255,255,255,0.03); padding:18px;border-radius:12px; box-shadow:0 6px 18px rgba(2,6,23,0.6)}
 
-<div class="flex h-screen">
-  <!-- Sidebar -->
-  <div class="w-64 bg-white shadow-lg p-6">
-    <h1 class="text-2xl font-bold mb-6">Wallet Dashboard</h1>
-    <ul>
-      <li class="mb-4"><button id="nav-dashboard" class="text-blue-600 hover:underline">Dashboard</button></li>
-      <li class="mb-4"><button id="nav-wallets" class="text-blue-600 hover:underline">Wallets</button></li>
-      <li class="mb-4"><button id="nav-transactions" class="text-blue-600 hover:underline">Transactions</button></li>
-      <li class="mb-4"><button id="nav-operations" class="text-blue-600 hover:underline">Wallet Ops</button></li>
-    </ul>
+form .row{display:grid;grid-template-columns:1fr 180px;gap:12px;margin-bottom:12px}
+label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px}
+input[type=text],select{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
+.small{font-size:12px;color:var(--muted)}
+.controls{display:flex;gap:8px;margin-top:8px}
+button{background:var(--accent);border:none;padding:10px 14px;border-radius:10px;color:#052025;cursor:pointer;font-weight:600}
+button.ghost{background:transparent;color:var(--muted);border:1px solid rgba(255,255,255,0.04)}
+
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
+pre{background:#041826;padding:12px;border-radius:8px;overflow:auto;max-height:420px;border:1px solid rgba(255,255,255,0.03)}
+.meta{display:flex;gap:12px;align-items:center;margin-bottom:8px}
+.badge{padding:6px 10px;border-radius:999px;font-weight:700}
+.status{font-weight:700}
+.ok{background:rgba(22,163,74,0.12);color:var(--ok);border:1px solid rgba(22,163,74,0.12)}
+.err{background:rgba(239,68,68,0.08);color:var(--err);border:1px solid rgba(239,68,68,0.08)}
+.muted{color:var(--muted)}
+
+.footer{margin-top:18px;color:var(--muted);font-size:13px}
+@media(max-width:880px){.grid{grid-template-columns:1fr}}
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>Escrow Confirm — Frontend Tester</h1>
+        <p class="lead">Send test confirmations to <code>/api/confirm</code>. Enter base URL, API key, and payload — then inspect responses.</p>
+      </div>
+    </header><div class="card">
+  <form id="confirmForm">
+    <div class="row">
+      <div>
+        <label for="baseUrl">API URL</label>
+        <input id="baseUrl" type="text" placeholder="http://localhost:3000/api/confirm" value="http://localhost:3000/api/confirm" />
+        <div class="small muted">Full endpoint where POST /api/confirm is reachable</div>
+      </div>
+
+      <div>
+        <label for="apiKey">x-api-key</label>
+        <input id="apiKey" type="text" placeholder="Paste API key (stored in localStorage)" />
+        <div class="small muted">This stays in your browser's localStorage (not sent to any server except target API).</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+      <div>
+        <label for="tradeId">tradeId</label>
+        <input id="tradeId" type="text" placeholder="example-trade-123" />
+      </div>
+
+      <div>
+        <label for="party">party</label>
+        <select id="party">
+          <option value="buyer">buyer</option>
+          <option value="seller">seller</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="margin-top:12px">
+      <label for="receiverAddress">receiverAddress (optional)</label>
+      <input id="receiverAddress" type="text" placeholder="0x... (Ethereum address)" />
+    </div>
+
+    <div class="controls">
+      <button id="sendBtn" type="button">Send Confirm</button>
+      <button id="saveKey" type="button" class="ghost">Save Key</button>
+      <button id="clearKey" type="button" class="ghost">Clear Key</button>
+      <button id="copyCurl" type="button" class="ghost">Copy cURL</button>
+    </div>
+  </form>
+
+  <div class="grid">
+    <div>
+      <div class="meta">
+        <div class="badge muted">Response</div>
+        <div id="statusBadge" class="badge muted">No request yet</div>
+        <div id="statusText" class="muted">—</div>
+      </div>
+      <pre id="responsePretty">{ "ready": true }</pre>
+    </div>
+
+    <div>
+      <div class="meta">
+        <div class="badge muted">Raw</div>
+        <div class="muted">Headers & body</div>
+      </div>
+      <pre id="rawOutput">—</pre>
+    </div>
   </div>
 
-  <!-- Main content -->
-  <div class="flex-1 p-6 overflow-auto">
-    <div id="main-content">
-      <h2 class="text-xl font-bold mb-4">Dashboard</h2>
-      <p>Welcome! Use the sidebar to manage wallets and transactions.</p>
-    </div>
+  <div class="footer">
+    <div>Tips: set <code>baseUrl</code> to your server. If your API is on a different origin, ensure CORS is enabled on the server.</div>
   </div>
 </div>
 
-<!-- Notification Toast -->
-<div id="toast" class="fixed bottom-6 right-6 bg-green-500 text-white px-4 py-2 rounded shadow-lg hidden"></div>
+  </div>  <script>
+    // Small helper UI to call POST /api/confirm and show responses
+    const $ = id => document.getElementById(id);
+    const baseUrlEl = $('baseUrl');
+    const apiKeyEl = $('apiKey');
+    const tradeIdEl = $('tradeId');
+    const partyEl = $('party');
+    const receiverEl = $('receiverAddress');
+    const sendBtn = $('sendBtn');
+    const saveKeyBtn = $('saveKey');
+    const clearKeyBtn = $('clearKey');
+    const responsePretty = $('responsePretty');
+    const rawOutput = $('rawOutput');
+    const statusBadge = $('statusBadge');
+    const statusText = $('statusText');
+    const copyCurlBtn = $('copyCurl');
 
-<script>
-// ================= CONFIG =================
-const API_URL = 'https://escrow-blackp2p-com.onrender.com/api/wallet';
-const API_KEY = '97f8-832d-85b5-a40758b5820'; // fixed API key
+    // load key from localStorage
+    const HARDCODED_API_KEY = '97f8-832d-85b5-a40758b5820';
+    // WARNING: key is hardcoded for local testing only. Do NOT commit or share.
+    apiKeyEl.value = HARDCODED_API_KEY || localStorage.getItem('escrow_api_key') || '';
 
-// ================= UTILITY =================
-function showToast(message, success = true) {
-  const toast = document.getElementById('toast');
-  toast.textContent = message;
-  toast.className = success
-    ? 'fixed bottom-6 right-6 bg-green-500 text-white px-4 py-2 rounded shadow-lg'
-    : 'fixed bottom-6 right-6 bg-red-500 text-white px-4 py-2 rounded shadow-lg';
-  toast.classList.remove('hidden');
-  setTimeout(() => toast.classList.add('hidden'), 3000);
-}
+    function setStatus(code, text){
+      statusText.textContent = text || '';
+      statusBadge.textContent = code ? `HTTP ${code}` : 'No request yet';
+      statusBadge.className = 'badge ' + (code >=200 && code < 300 ? 'ok' : code >=400 ? 'err' : 'muted');
+    }
 
-// Helper: fetch with API key
-async function fetchWithKey(url, options = {}) {
-  options.headers = {
-    ...(options.headers || {}),
-    'Content-Type': 'application/json',
-    'X-API-KEY': API_KEY
-  };
-  const res = await fetch(url, options);
-  return res.json();
-}
+    function pretty(obj){
+      try{return JSON.stringify(obj, null, 2);}catch(e){return String(obj)}
+    }
 
-// ================= NAVIGATION =================
-document.getElementById('nav-dashboard').onclick = () => loadDashboard();
-document.getElementById('nav-wallets').onclick = () => loadWallets();
-document.getElementById('nav-transactions').onclick = () => loadTransactions();
-document.getElementById('nav-operations').onclick = () => loadWalletOperations();
+    saveKeyBtn.addEventListener('click', ()=>{
+      localStorage.setItem('escrow_api_key', apiKeyEl.value.trim());
+      alert('API key saved to localStorage. Do NOT paste keys into public chat.');
+    });
 
-// ================= DASHBOARD =================
-function loadDashboard() {
-  document.getElementById('main-content').innerHTML = `
-    <h2 class="text-xl font-bold mb-4">Dashboard</h2>
-    <p>Welcome! Use the sidebar to manage wallets, perform operations, and view transactions.</p>
-  `;
-}
+    clearKeyBtn.addEventListener('click', ()=>{
+      localStorage.removeItem('escrow_api_key');
+      apiKeyEl.value = '';
+      alert('API key cleared from localStorage.');
+    });
 
-// ================= WALLETS =================
-async function loadWallets() {
-  document.getElementById('main-content').innerHTML = `
-    <h2 class="text-xl font-bold mb-4">Wallets</h2>
-    <button id="create-wallet-btn" class="bg-blue-500 text-white px-4 py-2 rounded mb-4">Create New Wallet</button>
-    <div id="wallet-list">Loading wallets...</div>
-  `;
+    copyCurlBtn.addEventListener('click', async ()=>{
+      const url = baseUrlEl.value.trim();
+      const body = { tradeId: tradeIdEl.value.trim(), party: partyEl.value, receiverAddress: receiverEl.value.trim() || undefined };
+      const key = apiKeyEl.value.trim() || localStorage.getItem('escrow_api_key') || '';
+      const curl = `curl -X POST '${url.replace(/'/g, "\\'")}' \\\n  -H 'Content-Type: application/json' \\\n  -H 'x-api-key: ${key}' \\\n  -d '${JSON.stringify(body)}'`;
+      await navigator.clipboard.writeText(curl);
+      alert('cURL copied to clipboard');
+    });
 
-  document.getElementById('create-wallet-btn').onclick = createWallet;
+    async function doRequest(){
+      const url = baseUrlEl.value.trim();
+      if(!url){alert('Set base URL');return}
+      const payload = { tradeId: tradeIdEl.value.trim(), party: partyEl.value, };
+      if(receiverEl.value.trim()) payload.receiverAddress = receiverEl.value.trim();
 
-  try {
-    const data = await fetchWithKey(API_URL + '/');
-    if(!data.wallets) data.wallets = [];
-    const walletsHTML = data.wallets.map(w => `
-      <div class="bg-white p-4 mb-2 shadow rounded flex justify-between items-center">
-        <div>
-          <strong>ID:</strong> ${w.walletId}<br>
-          <strong>Balances:</strong> ${JSON.stringify(w.balances)}
-        </div>
-        <button class="bg-gray-200 px-3 py-1 rounded" onclick="viewTransactions('${w.walletId}')">Transactions</button>
-      </div>
-    `).join('');
-    document.getElementById('wallet-list').innerHTML = walletsHTML;
-  } catch(err) {
-    showToast(err.message, false);
-    document.getElementById('wallet-list').innerHTML = '<p>Error loading wallets.</p>';
-  }
-}
+      const key = apiKeyEl.value.trim() || localStorage.getItem('escrow_api_key') || '';
+      if(!key){ if(!confirm('No API key provided. Proceed without key?')) return }
 
-// Create Wallet
-async function createWallet() {
-  try {
-    const data = await fetchWithKey(`${API_URL}/create`, { method: 'POST', body: JSON.stringify({}) });
-    if(data.success) {
-      showToast('Wallet created: ' + data.walletId);
-      loadWallets();
-    } else showToast(data.error || 'Error creating wallet', false);
-  } catch(err) { showToast(err.message,false); }
-}
+      setStatus(null, 'Sending...');
+      responsePretty.textContent = 'Sending request...';
+      rawOutput.textContent = '—';
 
-// ================= WALLET OPERATIONS =================
-function loadWalletOperations() {
-  document.getElementById('main-content').innerHTML = `
-    <h2 class="text-xl font-bold mb-4">Wallet Operations</h2>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <!-- Credit Form -->
-      <div class="bg-white p-4 shadow rounded">
-        <h3 class="font-bold mb-2">Credit Wallet</h3>
-        <input id="credit-walletId" placeholder="Wallet ID" class="border p-2 w-full mb-2">
-        <input id="credit-token" placeholder="Token (USDT,USDC...)" class="border p-2 w-full mb-2">
-        <input id="credit-amount" placeholder="Amount" type="number" class="border p-2 w-full mb-2">
-        <input id="credit-meta" placeholder="Meta (optional)" class="border p-2 w-full mb-2">
-        <button class="bg-green-500 text-white px-4 py-2 rounded" onclick="creditWallet()">Credit</button>
-      </div>
+      try{
+        const controller = new AbortController();
+        const timeout = setTimeout(()=>controller.abort(), 15000);
 
-      <!-- Debit Form -->
-      <div class="bg-white p-4 shadow rounded">
-        <h3 class="font-bold mb-2">Debit Wallet</h3>
-        <input id="debit-walletId" placeholder="Wallet ID" class="border p-2 w-full mb-2">
-        <input id="debit-token" placeholder="Token (USDT,USDC...)" class="border p-2 w-full mb-2">
-        <input id="debit-amount" placeholder="Amount" type="number" class="border p-2 w-full mb-2">
-        <input id="debit-meta" placeholder="Meta (optional)" class="border p-2 w-full mb-2">
-        <button class="bg-red-500 text-white px-4 py-2 rounded" onclick="debitWallet()">Debit</button>
-      </div>
+        const resp = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(key ? { 'x-api-key': key } : {})
+          },
+          body: JSON.stringify(payload),
+          signal: controller.signal,
+        });
+        clearTimeout(timeout);
 
-      <!-- Transfer Form -->
-      <div class="bg-white p-4 shadow rounded md:col-span-2">
-        <h3 class="font-bold mb-2">Transfer Between Wallets</h3>
-        <input id="transfer-from" placeholder="From Wallet ID" class="border p-2 w-full mb-2">
-        <input id="transfer-to" placeholder="To Wallet ID" class="border p-2 w-full mb-2">
-        <input id="transfer-token" placeholder="Token" class="border p-2 w-full mb-2">
-        <input id="transfer-amount" placeholder="Amount" type="number" class="border p-2 w-full mb-2">
-        <input id="transfer-meta" placeholder="Meta (optional)" class="border p-2 w-full mb-2">
-        <button class="bg-blue-500 text-white px-4 py-2 rounded" onclick="transferWallet()">Transfer</button>
-      </div>
-    </div>
-  `;
-}
+        const text = await resp.text();
+        let body;
+        try{ body = JSON.parse(text); } catch(e){ body = text }
 
-// Credit Wallet
-async function creditWallet() {
-  const walletId = document.getElementById('credit-walletId').value;
-  const token = document.getElementById('credit-token').value;
-  const amount = document.getElementById('credit-amount').value;
-  const meta = document.getElementById('credit-meta').value;
+        // Update UI
+        setStatus(resp.status, resp.statusText || '');
+        responsePretty.textContent = pretty(body);
 
-  if(!walletId || !token || !amount) { showToast('All required fields needed', false); return; }
+        // raw output including headers
+        const headers = {};
+        resp.headers.forEach((v,k)=>headers[k]=v);
+        rawOutput.textContent = '=== STATUS ===\n' + resp.status + ' ' + resp.statusText + '\n\n' + '=== HEADERS ===\n' + pretty(headers) + '\n\n' + '=== BODY ===\n' + (typeof body === 'string' ? body : pretty(body));
 
-  try {
-    const data = await fetchWithKey(`${API_URL}/${walletId}/credit`, { method:'POST', body: JSON.stringify({ token, amount, meta }) });
-    if(data.success) showToast('Wallet credited successfully');
-    else showToast(data.error || 'Error', false);
-  } catch(err) { showToast(err.message,false); }
-}
+        // Helpful hint messages based on status
+        if(resp.status === 400){
+          console.warn('400: check payload and response.reason field for details');
+        } else if(resp.status === 401){
+          alert('401 Unauthorized: check x-api-key');
+        } else if(resp.status === 404){
+          alert('404 Not Found: trade or deposit not found');
+        } else if(resp.status >= 500){
+          alert('Server error (5xx). Check server logs.');
+        }
 
-// Debit Wallet
-async function debitWallet() {
-  const walletId = document.getElementById('debit-walletId').value;
-  const token = document.getElementById('debit-token').value;
-  const amount = document.getElementById('debit-amount').value;
-  const meta = document.getElementById('debit-meta').value;
+      }catch(err){
+        console.error(err);
+        setStatus(0, 'Network / CORS / Timeout');
+        responsePretty.textContent = String(err);
+        rawOutput.textContent = String(err);
+        alert('Request failed — possible CORS or network issue. Make sure the API accepts requests from this origin.');
+      }
+    }
 
-  if(!walletId || !token || !amount) { showToast('All required fields needed', false); return; }
+    sendBtn.addEventListener('click', doRequest);
 
-  try {
-    const data = await fetchWithKey(`${API_URL}/${walletId}/debit`, { method:'POST', body: JSON.stringify({ token, amount, meta }) });
-    if(data.success) showToast('Wallet debited successfully');
-    else showToast(data.error || 'Error', false);
-  } catch(err) { showToast(err.message,false); }
-}
-
-// Transfer Wallet
-async function transferWallet() {
-  const fromWalletId = document.getElementById('transfer-from').value;
-  const toWalletId = document.getElementById('transfer-to').value;
-  const token = document.getElementById('transfer-token').value;
-  const amount = document.getElementById('transfer-amount').value;
-  const meta = document.getElementById('transfer-meta').value;
-
-  if(!fromWalletId || !toWalletId || !token || !amount) { showToast('All required fields needed', false); return; }
-
-  try {
-    const data = await fetchWithKey(`${API_URL}/transfer`, { method:'POST', body: JSON.stringify({ fromWalletId, toWalletId, token, amount, meta }) });
-    if(data.success) showToast('Transfer successful');
-    else showToast(data.error || 'Error', false);
-  } catch(err) { showToast(err.message,false); }
-}
-
-// ================= TRANSACTIONS =================
-async function loadTransactions() {
-  document.getElementById('main-content').innerHTML = `
-    <h2 class="text-xl font-bold mb-4">Transactions</h2>
-    <input id="tx-wallet-id" placeholder="Enter Wallet ID" class="border p-2 mb-2 w-1/2">
-    <button class="bg-blue-500 text-white px-4 py-2 rounded mb-4" onclick="viewTransactions()">View Transactions</button>
-    <div id="transactions-list"></div>
-  `;
-}
-
-async function viewTransactions(walletIdInput) {
-  const walletId = walletIdInput || document.getElementById('tx-wallet-id')?.value;
-  if(!walletId) { showToast('Wallet ID required', false); return; }
-
-  try {
-    const data = await fetchWithKey(`${API_URL}/${walletId}/transactions`);
-    if(!data.transactions) data.transactions = [];
-    const html = data.transactions.map(t => `
-      <div class="bg-white p-2 mb-1 rounded shadow">
-        <strong>${t.type}</strong> ${t.amount} ${t.token} - ${t.meta || ''}
-      </div>
-    `).join('');
-    document.getElementById('transactions-list').innerHTML = html;
-  } catch(err) { showToast(err.message,false); }
-}
-</script>
-
-</body>
+    // allow Enter to submit in inputs
+    ['tradeId','receiverAddress'].forEach(id=>{
+      document.getElementById(id).addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); doRequest() } });
+    });
+  </script></body>
 </html>
