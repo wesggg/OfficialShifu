@@ -6,15 +6,12 @@
 <title>Virtual Wallet Dashboard</title>
 <style>
   body { font-family: Arial, sans-serif; background: #f2f2f2; padding: 20px; }
-  h2 { color: #333; }
+  h1, h2 { color: #333; }
   form { background: #fff; padding: 15px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
   input, select { padding: 8px; margin: 5px 0; width: 100%; box-sizing: border-box; }
   button { padding: 10px 15px; margin-top: 10px; cursor: pointer; background: #4CAF50; color: #fff; border: none; border-radius: 5px; }
   button:hover { background: #45a049; }
   .output { background: #fff; padding: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; white-space: pre-wrap; }
-  table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-  th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-  th { background-color: #f4f4f4; }
 </style>
 </head>
 <body>
@@ -30,7 +27,7 @@
 </form>
 <div id="createWalletOutput" class="output"></div>
 
-<!-- Check Single Balance -->
+<!-- Single Balance -->
 <h2>Check Balance</h2>
 <form id="balanceForm">
   <input type="text" id="balanceWalletId" placeholder="Wallet ID">
@@ -39,7 +36,7 @@
 </form>
 <div id="balanceOutput" class="output"></div>
 
-<!-- Check All Balances -->
+<!-- All Balances -->
 <h2>All Balances</h2>
 <form id="allBalancesForm">
   <input type="text" id="allBalancesWalletId" placeholder="Wallet ID">
@@ -53,7 +50,7 @@
   <input type="text" id="creditWalletId" placeholder="Wallet ID">
   <input type="text" id="creditToken" placeholder="Token Symbol">
   <input type="number" id="creditAmount" placeholder="Amount">
-  <input type="text" id="creditMeta" placeholder="Meta JSON (optional)">
+  <input type="text" id="creditMeta" placeholder='Meta JSON (optional, e.g. {"note":"test"})'>
   <button type="submit">Credit</button>
 </form>
 <div id="creditOutput" class="output"></div>
@@ -64,7 +61,7 @@
   <input type="text" id="debitWalletId" placeholder="Wallet ID">
   <input type="text" id="debitToken" placeholder="Token Symbol">
   <input type="number" id="debitAmount" placeholder="Amount">
-  <input type="text" id="debitMeta" placeholder="Meta JSON (optional)">
+  <input type="text" id="debitMeta" placeholder='Meta JSON (optional, e.g. {"note":"test"})'>
   <button type="submit">Debit</button>
 </form>
 <div id="debitOutput" class="output"></div>
@@ -79,9 +76,9 @@
 <div id="transactionsOutput" class="output"></div>
 
 <script>
-const API_BASE = "https://escrow-blackp2p-com.onrender.com";
+const API_BASE = "https://escrow-blackp2p-com.onrender.com"; // Your API URL
 
-// Helper to display JSON
+// Helper to display JSON output
 function displayOutput(elementId, data) {
   document.getElementById(elementId).textContent = JSON.stringify(data, null, 2);
 }
@@ -92,14 +89,16 @@ document.getElementById("createWalletForm").addEventListener("submit", async (e)
   const tenantId = document.getElementById("tenantId").value.trim() || undefined;
   const tokensInput = document.getElementById("tokens").value.trim();
   const tokens = tokensInput ? tokensInput.split(",").map(t => t.trim()) : undefined;
-  
-  const res = await fetch(`${API_BASE}/create`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ tenantId, tokens })
-  });
-  const data = await res.json();
-  displayOutput("createWalletOutput", data);
+
+  try {
+    const res = await fetch(`${API_BASE}/create`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tenantId, tokens })
+    });
+    const data = await res.json();
+    displayOutput("createWalletOutput", data);
+  } catch (err) { displayOutput("createWalletOutput", { error: err.message }); }
 });
 
 // ---------------- Single Balance ----------------
@@ -108,9 +107,11 @@ document.getElementById("balanceForm").addEventListener("submit", async (e) => {
   const walletId = document.getElementById("balanceWalletId").value.trim();
   const token = document.getElementById("balanceToken").value.trim();
 
-  const res = await fetch(`${API_BASE}/balance?walletId=${walletId}&token=${token}`);
-  const data = await res.json();
-  displayOutput("balanceOutput", data);
+  try {
+    const res = await fetch(`${API_BASE}/balance?walletId=${walletId}&token=${token}`);
+    const data = await res.json();
+    displayOutput("balanceOutput", data);
+  } catch (err) { displayOutput("balanceOutput", { error: err.message }); }
 });
 
 // ---------------- All Balances ----------------
@@ -118,9 +119,11 @@ document.getElementById("allBalancesForm").addEventListener("submit", async (e) 
   e.preventDefault();
   const walletId = document.getElementById("allBalancesWalletId").value.trim();
 
-  const res = await fetch(`${API_BASE}/balances?walletId=${walletId}`);
-  const data = await res.json();
-  displayOutput("allBalancesOutput", data);
+  try {
+    const res = await fetch(`${API_BASE}/balances?walletId=${walletId}`);
+    const data = await res.json();
+    displayOutput("allBalancesOutput", data);
+  } catch (err) { displayOutput("allBalancesOutput", { error: err.message }); }
 });
 
 // ---------------- Credit Wallet ----------------
@@ -130,15 +133,18 @@ document.getElementById("creditForm").addEventListener("submit", async (e) => {
   const token = document.getElementById("creditToken").value.trim();
   const amount = parseFloat(document.getElementById("creditAmount").value.trim());
   let meta;
-  try { meta = document.getElementById("creditMeta").value ? JSON.parse(document.getElementById("creditMeta").value) : undefined; } catch { alert("Meta must be valid JSON"); return; }
+  try { meta = document.getElementById("creditMeta").value ? JSON.parse(document.getElementById("creditMeta").value) : undefined; } 
+  catch { alert("Meta must be valid JSON"); return; }
 
-  const res = await fetch(`${API_BASE}/credit`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ walletId, token, amount, meta })
-  });
-  const data = await res.json();
-  displayOutput("creditOutput", data);
+  try {
+    const res = await fetch(`${API_BASE}/credit`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ walletId, token, amount, meta })
+    });
+    const data = await res.json();
+    displayOutput("creditOutput", data);
+  } catch (err) { displayOutput("creditOutput", { error: err.message }); }
 });
 
 // ---------------- Debit Wallet ----------------
@@ -148,27 +154,32 @@ document.getElementById("debitForm").addEventListener("submit", async (e) => {
   const token = document.getElementById("debitToken").value.trim();
   const amount = parseFloat(document.getElementById("debitAmount").value.trim());
   let meta;
-  try { meta = document.getElementById("debitMeta").value ? JSON.parse(document.getElementById("debitMeta").value) : undefined; } catch { alert("Meta must be valid JSON"); return; }
+  try { meta = document.getElementById("debitMeta").value ? JSON.parse(document.getElementById("debitMeta").value) : undefined; } 
+  catch { alert("Meta must be valid JSON"); return; }
 
-  const res = await fetch(`${API_BASE}/debit`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ walletId, token, amount, meta })
-  });
-  const data = await res.json();
-  displayOutput("debitOutput", data);
+  try {
+    const res = await fetch(`${API_BASE}/debit`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ walletId, token, amount, meta })
+    });
+    const data = await res.json();
+    displayOutput("debitOutput", data);
+  } catch (err) { displayOutput("debitOutput", { error: err.message }); }
 });
 
-// ---------------- Transactions ----------------
+// ---------------- Transaction History ----------------
 document.getElementById("transactionsForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const walletId = document.getElementById("transactionsWalletId").value.trim();
   const token = document.getElementById("transactionsToken").value.trim();
-
   const url = token ? `${API_BASE}/transactions?walletId=${walletId}&token=${token}` : `${API_BASE}/transactions?walletId=${walletId}`;
-  const res = await fetch(url);
-  const data = await res.json();
-  displayOutput("transactionsOutput", data);
+
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    displayOutput("transactionsOutput", data);
+  } catch (err) { displayOutput("transactionsOutput", { error: err.message }); }
 });
 </script>
 
