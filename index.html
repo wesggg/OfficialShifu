@@ -1,234 +1,176 @@
-<!doctype html>
-
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Escrow Confirm Tester</title>
-  <style>
-    :root{--bg:#0f1724;--card:#0b1220;--muted:#9aa4b2;--accent:#06b6d4;--ok:#16a34a;--err:#ef4444}
-    *{box-sizing:border-box}
-    body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial; margin:0; background:linear-gradient(180deg,#071126 0%, #071b2b 100%); color:#e6eef6; min-height:100vh; padding:28px}
-    .container{max-width:960px;margin:0 auto}
-    header{display:flex;gap:16px;align-items:center;margin-bottom:20px}
-    h1{font-size:20px;margin:0}
-    p.lead{margin:0;color:var(--muted);font-size:13px}.card{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(0,0,0,0.04)); border:1px solid rgba(255,255,255,0.03); padding:18px;border-radius:12px; box-shadow:0 6px 18px rgba(2,6,23,0.6)}
-
-form .row{display:grid;grid-template-columns:1fr 180px;gap:12px;margin-bottom:12px}
-label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px}
-input[type=text],select{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
-.small{font-size:12px;color:var(--muted)}
-.controls{display:flex;gap:8px;margin-top:8px}
-button{background:var(--accent);border:none;padding:10px 14px;border-radius:10px;color:#052025;cursor:pointer;font-weight:600}
-button.ghost{background:transparent;color:var(--muted);border:1px solid rgba(255,255,255,0.04)}
-
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
-pre{background:#041826;padding:12px;border-radius:8px;overflow:auto;max-height:420px;border:1px solid rgba(255,255,255,0.03)}
-.meta{display:flex;gap:12px;align-items:center;margin-bottom:8px}
-.badge{padding:6px 10px;border-radius:999px;font-weight:700}
-.status{font-weight:700}
-.ok{background:rgba(22,163,74,0.12);color:var(--ok);border:1px solid rgba(22,163,74,0.12)}
-.err{background:rgba(239,68,68,0.08);color:var(--err);border:1px solid rgba(239,68,68,0.08)}
-.muted{color:var(--muted)}
-
-.footer{margin-top:18px;color:var(--muted);font-size:13px}
-@media(max-width:880px){.grid{grid-template-columns:1fr}}
-
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Virtual Wallet Dashboard</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #f2f2f2; padding: 20px; }
+  h2 { color: #333; }
+  form { background: #fff; padding: 15px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+  input, select { padding: 8px; margin: 5px 0; width: 100%; box-sizing: border-box; }
+  button { padding: 10px 15px; margin-top: 10px; cursor: pointer; background: #4CAF50; color: #fff; border: none; border-radius: 5px; }
+  button:hover { background: #45a049; }
+  .output { background: #fff; padding: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; white-space: pre-wrap; }
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+  th { background-color: #f4f4f4; }
+</style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <div>
-        <h1>Escrow Confirm — Frontend Tester</h1>
-        <p class="lead">Send test confirmations to <code>/api/confirm</code>. Enter base URL, API key, and payload — then inspect responses.</p>
-      </div>
-    </header><div class="card">
-  <form id="confirmForm">
-    <div class="row">
-      <div>
-        <label for="baseUrl">API URL</label>
-        <input id="baseUrl" type="text" placeholder="http://localhost:3000/api/confirm" value="http://localhost:3000/api/confirm" />
-        <div class="small muted">Full endpoint where POST /api/confirm is reachable</div>
-      </div>
 
-      <div>
-        <label for="apiKey">x-api-key</label>
-        <input id="apiKey" type="text" placeholder="Paste API key (stored in localStorage)" />
-        <div class="small muted">This stays in your browser's localStorage (not sent to any server except target API).</div>
-      </div>
-    </div>
+<h1>Virtual Wallet Dashboard</h1>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
-      <div>
-        <label for="tradeId">tradeId</label>
-        <input id="tradeId" type="text" placeholder="example-trade-123" />
-      </div>
+<!-- Create Wallet -->
+<h2>Create Wallet</h2>
+<form id="createWalletForm">
+  <input type="text" id="tenantId" placeholder="Tenant ID (optional)">
+  <input type="text" id="tokens" placeholder="Tokens (comma separated, optional)">
+  <button type="submit">Create Wallet</button>
+</form>
+<div id="createWalletOutput" class="output"></div>
 
-      <div>
-        <label for="party">party</label>
-        <select id="party">
-          <option value="buyer">buyer</option>
-          <option value="seller">seller</option>
-        </select>
-      </div>
-    </div>
+<!-- Check Single Balance -->
+<h2>Check Balance</h2>
+<form id="balanceForm">
+  <input type="text" id="balanceWalletId" placeholder="Wallet ID">
+  <input type="text" id="balanceToken" placeholder="Token Symbol">
+  <button type="submit">Get Balance</button>
+</form>
+<div id="balanceOutput" class="output"></div>
 
-    <div style="margin-top:12px">
-      <label for="receiverAddress">receiverAddress (optional)</label>
-      <input id="receiverAddress" type="text" placeholder="0x... (Ethereum address)" />
-    </div>
+<!-- Check All Balances -->
+<h2>All Balances</h2>
+<form id="allBalancesForm">
+  <input type="text" id="allBalancesWalletId" placeholder="Wallet ID">
+  <button type="submit">Get All Balances</button>
+</form>
+<div id="allBalancesOutput" class="output"></div>
 
-    <div class="controls">
-      <button id="sendBtn" type="button">Send Confirm</button>
-      <button id="saveKey" type="button" class="ghost">Save Key</button>
-      <button id="clearKey" type="button" class="ghost">Clear Key</button>
-      <button id="copyCurl" type="button" class="ghost">Copy cURL</button>
-    </div>
-  </form>
+<!-- Credit Wallet -->
+<h2>Credit Wallet</h2>
+<form id="creditForm">
+  <input type="text" id="creditWalletId" placeholder="Wallet ID">
+  <input type="text" id="creditToken" placeholder="Token Symbol">
+  <input type="number" id="creditAmount" placeholder="Amount">
+  <input type="text" id="creditMeta" placeholder="Meta JSON (optional)">
+  <button type="submit">Credit</button>
+</form>
+<div id="creditOutput" class="output"></div>
 
-  <div class="grid">
-    <div>
-      <div class="meta">
-        <div class="badge muted">Response</div>
-        <div id="statusBadge" class="badge muted">No request yet</div>
-        <div id="statusText" class="muted">—</div>
-      </div>
-      <pre id="responsePretty">{ "ready": true }</pre>
-    </div>
+<!-- Debit Wallet -->
+<h2>Debit Wallet</h2>
+<form id="debitForm">
+  <input type="text" id="debitWalletId" placeholder="Wallet ID">
+  <input type="text" id="debitToken" placeholder="Token Symbol">
+  <input type="number" id="debitAmount" placeholder="Amount">
+  <input type="text" id="debitMeta" placeholder="Meta JSON (optional)">
+  <button type="submit">Debit</button>
+</form>
+<div id="debitOutput" class="output"></div>
 
-    <div>
-      <div class="meta">
-        <div class="badge muted">Raw</div>
-        <div class="muted">Headers & body</div>
-      </div>
-      <pre id="rawOutput">—</pre>
-    </div>
-  </div>
+<!-- Transaction History -->
+<h2>Transaction History</h2>
+<form id="transactionsForm">
+  <input type="text" id="transactionsWalletId" placeholder="Wallet ID">
+  <input type="text" id="transactionsToken" placeholder="Token (optional)">
+  <button type="submit">Get Transactions</button>
+</form>
+<div id="transactionsOutput" class="output"></div>
 
-  <div class="footer">
-    <div>Tips: set <code>baseUrl</code> to your server. If your API is on a different origin, ensure CORS is enabled on the server.</div>
-  </div>
-</div>
+<script>
+const API_BASE = "https://escrow-blackp2p-com.onrender.com";
 
-  </div>  <script>
-    // Small helper UI to call POST /api/confirm and show responses
-    const $ = id => document.getElementById(id);
-    const baseUrlEl = $('baseUrl');
-    const apiKeyEl = $('apiKey');
-    const tradeIdEl = $('tradeId');
-    const partyEl = $('party');
-    const receiverEl = $('receiverAddress');
-    const sendBtn = $('sendBtn');
-    const saveKeyBtn = $('saveKey');
-    const clearKeyBtn = $('clearKey');
-    const responsePretty = $('responsePretty');
-    const rawOutput = $('rawOutput');
-    const statusBadge = $('statusBadge');
-    const statusText = $('statusText');
-    const copyCurlBtn = $('copyCurl');
+// Helper to display JSON
+function displayOutput(elementId, data) {
+  document.getElementById(elementId).textContent = JSON.stringify(data, null, 2);
+}
 
-    // load key from localStorage
-    const HARDCODED_API_KEY = '97f8-832d-85b5-a40758b5820';
-    // WARNING: key is hardcoded for local testing only. Do NOT commit or share.
-    apiKeyEl.value = HARDCODED_API_KEY || localStorage.getItem('escrow_api_key') || '';
+// ---------------- Create Wallet ----------------
+document.getElementById("createWalletForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const tenantId = document.getElementById("tenantId").value.trim() || undefined;
+  const tokensInput = document.getElementById("tokens").value.trim();
+  const tokens = tokensInput ? tokensInput.split(",").map(t => t.trim()) : undefined;
+  
+  const res = await fetch(`${API_BASE}/create`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tenantId, tokens })
+  });
+  const data = await res.json();
+  displayOutput("createWalletOutput", data);
+});
 
-    function setStatus(code, text){
-      statusText.textContent = text || '';
-      statusBadge.textContent = code ? `HTTP ${code}` : 'No request yet';
-      statusBadge.className = 'badge ' + (code >=200 && code < 300 ? 'ok' : code >=400 ? 'err' : 'muted');
-    }
+// ---------------- Single Balance ----------------
+document.getElementById("balanceForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const walletId = document.getElementById("balanceWalletId").value.trim();
+  const token = document.getElementById("balanceToken").value.trim();
 
-    function pretty(obj){
-      try{return JSON.stringify(obj, null, 2);}catch(e){return String(obj)}
-    }
+  const res = await fetch(`${API_BASE}/balance?walletId=${walletId}&token=${token}`);
+  const data = await res.json();
+  displayOutput("balanceOutput", data);
+});
 
-    saveKeyBtn.addEventListener('click', ()=>{
-      localStorage.setItem('escrow_api_key', apiKeyEl.value.trim());
-      alert('API key saved to localStorage. Do NOT paste keys into public chat.');
-    });
+// ---------------- All Balances ----------------
+document.getElementById("allBalancesForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const walletId = document.getElementById("allBalancesWalletId").value.trim();
 
-    clearKeyBtn.addEventListener('click', ()=>{
-      localStorage.removeItem('escrow_api_key');
-      apiKeyEl.value = '';
-      alert('API key cleared from localStorage.');
-    });
+  const res = await fetch(`${API_BASE}/balances?walletId=${walletId}`);
+  const data = await res.json();
+  displayOutput("allBalancesOutput", data);
+});
 
-    copyCurlBtn.addEventListener('click', async ()=>{
-      const url = baseUrlEl.value.trim();
-      const body = { tradeId: tradeIdEl.value.trim(), party: partyEl.value, receiverAddress: receiverEl.value.trim() || undefined };
-      const key = apiKeyEl.value.trim() || localStorage.getItem('escrow_api_key') || '';
-      const curl = `curl -X POST '${url.replace(/'/g, "\\'")}' \\\n  -H 'Content-Type: application/json' \\\n  -H 'x-api-key: ${key}' \\\n  -d '${JSON.stringify(body)}'`;
-      await navigator.clipboard.writeText(curl);
-      alert('cURL copied to clipboard');
-    });
+// ---------------- Credit Wallet ----------------
+document.getElementById("creditForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const walletId = document.getElementById("creditWalletId").value.trim();
+  const token = document.getElementById("creditToken").value.trim();
+  const amount = parseFloat(document.getElementById("creditAmount").value.trim());
+  let meta;
+  try { meta = document.getElementById("creditMeta").value ? JSON.parse(document.getElementById("creditMeta").value) : undefined; } catch { alert("Meta must be valid JSON"); return; }
 
-    async function doRequest(){
-      const url = baseUrlEl.value.trim();
-      if(!url){alert('Set base URL');return}
-      const payload = { tradeId: tradeIdEl.value.trim(), party: partyEl.value, };
-      if(receiverEl.value.trim()) payload.receiverAddress = receiverEl.value.trim();
+  const res = await fetch(`${API_BASE}/credit`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ walletId, token, amount, meta })
+  });
+  const data = await res.json();
+  displayOutput("creditOutput", data);
+});
 
-      const key = apiKeyEl.value.trim() || localStorage.getItem('escrow_api_key') || '';
-      if(!key){ if(!confirm('No API key provided. Proceed without key?')) return }
+// ---------------- Debit Wallet ----------------
+document.getElementById("debitForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const walletId = document.getElementById("debitWalletId").value.trim();
+  const token = document.getElementById("debitToken").value.trim();
+  const amount = parseFloat(document.getElementById("debitAmount").value.trim());
+  let meta;
+  try { meta = document.getElementById("debitMeta").value ? JSON.parse(document.getElementById("debitMeta").value) : undefined; } catch { alert("Meta must be valid JSON"); return; }
 
-      setStatus(null, 'Sending...');
-      responsePretty.textContent = 'Sending request...';
-      rawOutput.textContent = '—';
+  const res = await fetch(`${API_BASE}/debit`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ walletId, token, amount, meta })
+  });
+  const data = await res.json();
+  displayOutput("debitOutput", data);
+});
 
-      try{
-        const controller = new AbortController();
-        const timeout = setTimeout(()=>controller.abort(), 15000);
+// ---------------- Transactions ----------------
+document.getElementById("transactionsForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const walletId = document.getElementById("transactionsWalletId").value.trim();
+  const token = document.getElementById("transactionsToken").value.trim();
 
-        const resp = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(key ? { 'x-api-key': key } : {})
-          },
-          body: JSON.stringify(payload),
-          signal: controller.signal,
-        });
-        clearTimeout(timeout);
+  const url = token ? `${API_BASE}/transactions?walletId=${walletId}&token=${token}` : `${API_BASE}/transactions?walletId=${walletId}`;
+  const res = await fetch(url);
+  const data = await res.json();
+  displayOutput("transactionsOutput", data);
+});
+</script>
 
-        const text = await resp.text();
-        let body;
-        try{ body = JSON.parse(text); } catch(e){ body = text }
-
-        // Update UI
-        setStatus(resp.status, resp.statusText || '');
-        responsePretty.textContent = pretty(body);
-
-        // raw output including headers
-        const headers = {};
-        resp.headers.forEach((v,k)=>headers[k]=v);
-        rawOutput.textContent = '=== STATUS ===\n' + resp.status + ' ' + resp.statusText + '\n\n' + '=== HEADERS ===\n' + pretty(headers) + '\n\n' + '=== BODY ===\n' + (typeof body === 'string' ? body : pretty(body));
-
-        // Helpful hint messages based on status
-        if(resp.status === 400){
-          console.warn('400: check payload and response.reason field for details');
-        } else if(resp.status === 401){
-          alert('401 Unauthorized: check x-api-key');
-        } else if(resp.status === 404){
-          alert('404 Not Found: trade or deposit not found');
-        } else if(resp.status >= 500){
-          alert('Server error (5xx). Check server logs.');
-        }
-
-      }catch(err){
-        console.error(err);
-        setStatus(0, 'Network / CORS / Timeout');
-        responsePretty.textContent = String(err);
-        rawOutput.textContent = String(err);
-        alert('Request failed — possible CORS or network issue. Make sure the API accepts requests from this origin.');
-      }
-    }
-
-    sendBtn.addEventListener('click', doRequest);
-
-    // allow Enter to submit in inputs
-    ['tradeId','receiverAddress'].forEach(id=>{
-      document.getElementById(id).addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); doRequest() } });
-    });
-  </script></body>
+</body>
 </html>
