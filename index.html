@@ -76,11 +76,17 @@
 <div id="transactionsOutput" class="output"></div>
 
 <script>
-const API_BASE = "https://escrow-blackp2p-com.onrender.com/api"; // Fixed: point to API
+const API_BASE = "https://escrow-blackp2p-com.onrender.com/api"; 
+const API_KEY = "97f8-832d-85b5-a40758b5820"; // Testing only
 
 // Helper to display JSON output
 function displayOutput(elementId, data) {
   document.getElementById(elementId).textContent = JSON.stringify(data, null, 2);
+}
+
+// Function to add API key to headers
+function authHeaders() {
+  return { "Content-Type": "application/json", "X-API-KEY": API_KEY };
 }
 
 // ---------------- Create Wallet ----------------
@@ -93,7 +99,7 @@ document.getElementById("createWalletForm").addEventListener("submit", async (e)
   try {
     const res = await fetch(`${API_BASE}/create`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: authHeaders(),
       body: JSON.stringify({ tenantId, tokens })
     });
     const data = await res.json();
@@ -108,7 +114,9 @@ document.getElementById("balanceForm").addEventListener("submit", async (e) => {
   const token = document.getElementById("balanceToken").value.trim();
 
   try {
-    const res = await fetch(`${API_BASE}/balance?walletId=${walletId}&token=${token}`);
+    const res = await fetch(`${API_BASE}/balance?walletId=${walletId}&token=${token}`, {
+      headers: authHeaders()
+    });
     const data = await res.json();
     displayOutput("balanceOutput", data);
   } catch (err) { displayOutput("balanceOutput", { error: err.message }); }
@@ -120,7 +128,9 @@ document.getElementById("allBalancesForm").addEventListener("submit", async (e) 
   const walletId = document.getElementById("allBalancesWalletId").value.trim();
 
   try {
-    const res = await fetch(`${API_BASE}/balances?walletId=${walletId}`);
+    const res = await fetch(`${API_BASE}/balances?walletId=${walletId}`, {
+      headers: authHeaders()
+    });
     const data = await res.json();
     displayOutput("allBalancesOutput", data);
   } catch (err) { displayOutput("allBalancesOutput", { error: err.message }); }
@@ -139,7 +149,7 @@ document.getElementById("creditForm").addEventListener("submit", async (e) => {
   try {
     const res = await fetch(`${API_BASE}/credit`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: authHeaders(),
       body: JSON.stringify({ walletId, token, amount, meta })
     });
     const data = await res.json();
@@ -160,7 +170,7 @@ document.getElementById("debitForm").addEventListener("submit", async (e) => {
   try {
     const res = await fetch(`${API_BASE}/debit`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: authHeaders(),
       body: JSON.stringify({ walletId, token, amount, meta })
     });
     const data = await res.json();
@@ -176,7 +186,7 @@ document.getElementById("transactionsForm").addEventListener("submit", async (e)
   const url = token ? `${API_BASE}/transactions?walletId=${walletId}&token=${token}` : `${API_BASE}/transactions?walletId=${walletId}`;
 
   try {
-    const res = await fetch(url);
+    const res = await fetch(url, { headers: authHeaders() });
     const data = await res.json();
     displayOutput("transactionsOutput", data);
   } catch (err) { displayOutput("transactionsOutput", { error: err.message }); }
